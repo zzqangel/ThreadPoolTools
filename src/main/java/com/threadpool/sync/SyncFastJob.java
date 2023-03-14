@@ -5,7 +5,6 @@ import java.util.concurrent.*;
 
 /**
  * this class is using in doing some batch jobs with the available computing capability
- * the current user has been set to thread local context
  * the worst result is to do batch jobs in current thread
  * and for the most time, u will run your batch jobs much faster
  *
@@ -27,8 +26,8 @@ public class SyncFastJob<T> {
     public SyncFastJob(List<? extends Callable<T>> callables) {
         if(callables == null) return;
         countDown = new CountDownLatch(callables.size());
-        for (Callable<T> runnAble : callables) {
-            rejectJobList.add(new SyncFastThreadCallableJob(runnAble, countDown, returnList));
+        for (Callable<T> callable : callables) {
+            rejectJobList.add(new SyncFastThreadCallableJob(callable, countDown, returnList));
         }
         callables.clear();
     }
@@ -41,7 +40,6 @@ public class SyncFastJob<T> {
                     SyncFastThreadPool.getPool().submit(runnable, rejectJobList);
                 } else {
                     runnable.call();
-                    System.out.println("stable");
                 }
             } catch (Exception e) {
                 e.printStackTrace();

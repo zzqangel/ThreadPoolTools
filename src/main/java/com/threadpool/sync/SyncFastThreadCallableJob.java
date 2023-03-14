@@ -9,15 +9,15 @@ public class SyncFastThreadCallableJob<T> implements Callable<T> {
     /**
      * init job thread name
      */
-    private String name;
+    private final String name;
     /**
      * the real job
      */
-    private Callable<T> job;
+    private final Callable<T> job;
     /**
      * to stop the sync list
      */
-    private CountDownLatch counter;
+    private final CountDownLatch counter;
 
     public String getName() {
         return this.name;
@@ -25,9 +25,6 @@ public class SyncFastThreadCallableJob<T> implements Callable<T> {
 
     private final List<T> returnList;
 
-    /**
-     * to set the current user to the thread local verb
-     */
     SyncFastThreadCallableJob(Callable<T> job, CountDownLatch counter, List<T> returnList) {
         this.name = Thread.currentThread().getName();
         this.job = job;
