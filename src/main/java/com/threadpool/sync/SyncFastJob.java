@@ -10,7 +10,7 @@ import java.util.concurrent.*;
  *
  * the default number of threads in the pool is 3 + 5/8 * systemProcessNumber
  * just equals to the gc threads number
- * may be it will be changed some days later
+ * maybe it will be changed some days later
  *
  * @Since 8.2
  */
