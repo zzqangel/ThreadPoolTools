@@ -5,39 +5,55 @@ import java.util.concurrent.*;
 
 /**
  * this class is using in doing some batch jobs with the available computing capability
+ * the current user has been set to thread local context
  * the worst result is to do batch jobs in current thread
  * and for the most time, u will run your batch jobs much faster
  *
  * the default number of threads in the pool is 3 + 5/8 * systemProcessNumber
  * just equals to the gc threads number
- * maybe it will be changed some days later
+ * may be it will be changed some days later
  *
  * @Since 8.2
  */
 
 public class SyncFastJob<T> {
 
-
     private final LinkedBlockingQueue<SyncFastThreadCallableJob> rejectJobList = new LinkedBlockingQueue<>();
 
     private final List<T> returnList = new CopyOnWriteArrayList<>();
 
     private CountDownLatch countDown;
+
+    private String threadName = null;
     public SyncFastJob(List<? extends Callable<T>> callables) {
         if(callables == null) return;
         countDown = new CountDownLatch(callables.size());
-        for (Callable<T> callable : callables) {
-            rejectJobList.add(new SyncFastThreadCallableJob(callable, countDown, returnList));
+        for (Callable<T> runnAble : callables) {
+            rejectJobList.add(new SyncFastThreadCallableJob(runnAble, countDown, returnList, SyncFastThreadPool.defaultThreadName));
         }
-        callables.clear();
+    }
+
+    SyncFastJob(List<? extends Callable<T>> callables, String threadName) {
+        if(callables == null) return;
+        countDown = new CountDownLatch(callables.size());
+        for (Callable<T> runnAble : callables) {
+            rejectJobList.add(new SyncFastThreadCallableJob(runnAble, countDown, returnList, threadName));
+        }
+        this.threadName = threadName;
     }
 
     public List<T> doJobsNow() {
+        SyncFastThreadPool syncFastThreadPool;
+        if(threadName == null) {
+            syncFastThreadPool = SyncFastThreadPool.getPool();
+        } else {
+            syncFastThreadPool = SyncFastThreadPool.getPrivatePool(threadName);
+        }
         while(!rejectJobList.isEmpty()) {
             try {
                 SyncFastThreadCallableJob runnable = rejectJobList.take();
-                if (SyncFastThreadPool.getPool().isAvailable()) {
-                    SyncFastThreadPool.getPool().submit(runnable, rejectJobList);
+                if (syncFastThreadPool.isAvailable()) {
+                    syncFastThreadPool.submit(runnable, rejectJobList);
                 } else {
                     runnable.call();
                 }
@@ -52,6 +68,10 @@ public class SyncFastJob<T> {
             e.printStackTrace();
         }
         return returnList;
+    }
+
+    public static <T> List<T> doJobsNow(List<? extends Callable<T>> callables) {
+        return  new SyncFastJob<>(callables).doJobsNow();
     }
 
 }
