@@ -71,7 +71,7 @@ public class SyncFastThreadPool {
         private final AtomicInteger threadNumber = new AtomicInteger(1);
         @Override
         public Thread newThread(Runnable r) {
-            return new Thread(r, name + threadNumber);
+            return new Thread(r, name + threadNumber.getAndIncrement());
         }
     }
 
